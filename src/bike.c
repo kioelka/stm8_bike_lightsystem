@@ -39,6 +39,8 @@ void bike_init()
         CLK_CKDIVR_bit.CPUDIV = 4;//Decrease CPU freq
         CLK_PCKENR1 = 0;
         CLK_PCKENR2 = 0;//disable peripherals
+	
+	//asm("nop");
                 
     };
 
