@@ -17,7 +17,7 @@ void delay(uint32_t t){t*=1000;while (t--);}
 
 void bike_init()
     {            
-
+        
         //init INPUTS
         PD_CR1_bit.C12 = 1; //Pullup PD2
         PC_CR1_bit.C17 = 1; //Pullup PC7
@@ -25,7 +25,7 @@ void bike_init()
         PD_CR1_bit.C13 = 1; //Pullup PD3
         
         //init OUTPUTS
-   
+        
         PC_DDR_bit.DDR4 = 1;
         PC_CR1_bit.C14= 1 ;//PC4 backlight
         PC_DDR_bit.DDR5 = 1;
@@ -39,9 +39,9 @@ void bike_init()
         CLK_CKDIVR_bit.CPUDIV = 4;//Decrease CPU freq
         CLK_PCKENR1 = 0;
         CLK_PCKENR2 = 0;//disable peripherals
-	
-	//asm("nop");
-                
+        
+        //asm("nop");
+        
     };
 
 
@@ -62,27 +62,50 @@ void bike_loop()
 
 void button::button_process()
     {
-        if (state!=(*IDR>>PIN & 1))
-                counter++;
+        if (state != (*IDR >> PIN & 1))
+            bounce_cnt++;
         else
-            counter=0;
+            bounce_cnt=0;
         
-        if (counter>ANTIDREBEZG)
-            state = (buttonState)(*IDR>>PIN & 1);
+        if (bounce_cnt > ANTIDREBEZG)
+            state = (buttonState)(*IDR >> PIN & 1);
+        
+        if (state == PRESSED)
+            counter++;
+        else
+            counter = 0;
     }
 
 void backlight_process()
     {
+        /*
+        switch blink mode
+        */
+        if (left_btn.state == PRESSED && back_btn.state == PRESSED && back_btn.counter == BLINK_SWITCH_INTERVAL){
+            backlight.blink ^= 1;
+        }
+        
+        
         if (back_btn.state==PRESSED)
             {
                 backlight.state = LIGHT_ON;
                 backlight.light_on();
             }
-        else
+        else if (backlight.blink == 0)
             {
                 backlight.light_off();
                 backlight.state = LIGHT_OFF;
             }
+        else {
+            if (backlight.counter++ > POVOROT_INTERVAL && backlight.counter < POVOROT_INTERVAL + 10){
+                backlight.light_on();
+            }
+            else {
+                if (backlight.counter >= POVOROT_INTERVAL + 10)
+                    backlight.counter = 0;
+                backlight.light_off();
+            }
+        }
     }
 
 void frontlight_process()
